@@ -65,6 +65,8 @@ func (r *Report) setupReportFormat(format string) {
 		setupJSONReport(r)
 	case "dyff":
 		setupDyffReport(r)
+	case "github":
+		setupGithubReport(r)
 	default:
 		setupDiffReport(r)
 	}
@@ -143,6 +145,17 @@ func setupDiffReport(r *Report) {
 	r.format.changestyles["ADD"] = ChangeStyle{color: "green", message: "has been added:"}
 	r.format.changestyles["REMOVE"] = ChangeStyle{color: "red", message: "has been removed:"}
 	r.format.changestyles["MODIFY"] = ChangeStyle{color: "yellow", message: "has changed:"}
+}
+
+// setup report for default output: diff
+func setupGithubReport(r *Report) {
+	r.format.output = func(r *Report, to io.Writer) {
+		for _, entry := range r.entries {
+			fmt.Fprintf(to, "::group::%s %s\n", entry.key, r.format.changestyles[entry.changeType].message)
+			printDiffRecords(entry.suppressedKinds, entry.kind, entry.context, entry.diffs, to)
+			fmt.Fprintln(to, "::endgroup")
+		}
+	}
 }
 
 // print report for default output: diff
